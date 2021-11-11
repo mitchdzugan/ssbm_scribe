@@ -9,11 +9,12 @@ const {
 const fs                                = require("fs/promises");
 const { SlippiGame }                    = require("@slippi/slippi-js");
 const util                              = require("util");
+const config                            = require("./config.json");
 
 const pexec = util.promisify(exec);
 
-const dumpPath = "C:\\Users\\Mitch\\AppData\\Roaming\\Slippi Launcher\\playback\\User\\Dump\\";
-const slippiExe = "C:\\Users\\Mitch\\AppData\\Roaming\\Slippi Launcher\\playback\\Slippi Dolphin.exe";
+const dumpPath = __dirname + "\\User\\Dump\\";
+const slippiExe = config.slippiExe;
 
 const getData = (game) => {
     const settings = game.getSettings();
@@ -136,7 +137,7 @@ const main = async () => {
     // PREPARE
     // const slpFile = process.argv[2];
     const slpFile = createWriteStream(__dirname + "\\todo.slp");
-    http.get("http://192.168.1.28:3000/api/take", async (res) => {
+    http.get("http://192.168.1.28:3000/api/fake", async (res) => {
         const filename = res
             .headers["content-disposition"]
             .split("filename=")[1]
@@ -156,6 +157,8 @@ const main = async () => {
         const DATA = getData(game);
 
         if (DATA.isSkip) {
+            /**
+             * TODO DELETE
             request.post({
                 url: "http://192.168.1.28:3000/api/" + filename + "/reject",
                 form: { skipReason: DATA.skipReason }
@@ -163,6 +166,8 @@ const main = async () => {
                 console.log("Requesting new in 5 seconds...");
                 setTimeout(main, 5000);
             });
+             *
+             */
         } else {
             const myPortId = settings.players[is0 ? 0 : 1].port - 1;
             const Command = {
@@ -228,9 +233,10 @@ const main = async () => {
             }
             await fs.writeFile(__dirname + "\\ready.slp", buffer);
             const slippiProc = spawn(slippiExe, [
+                "--user", __dirname + "\\User",
                 "--cout", "--batch", 
-                "--slippi-input", "C:\\Users\\Mitch\\Projects\\Recording\\record.json", 
-                "--exec", "C:\\Users\\Mitch\\Games\\melee.iso"
+                "--slippi-input", __dirname + "\\record.json", 
+                "--exec", config.meleeIso
             ]);
             slippiProc.stdout.on("data", (data) => {
                 const msg = data.toString().trim();
@@ -262,6 +268,9 @@ const main = async () => {
                                     'ffmpeg -i "C:\\Users\\Mitch\\Projects\\Recording\\full.avi" -c:a copy -c:v libx265 -b:v 12M "C:\\Users\\Mitch\\Projects\\Recording\\final.mp4"'
                                 );
                                 console.log("uploading...");
+                                
+                                /**
+                                 * TODO DELETE
                                 const req = request.post("http://192.168.1.28:3000/api/" + filename + "/upload", () => {
                                     console.log("Requesting new in 5 seconds...");
                                     setTimeout(main, 5000);
@@ -270,6 +279,8 @@ const main = async () => {
                                 form.append("Game", JSON.stringify(DATA.Game));
                                 form.append("Combos", JSON.stringify(DATA.Combos));
                                 form.append("vod", createReadStream(__dirname + "\\final.mp4"));
+                                 *
+                                 */
                             }
                         });
                     }

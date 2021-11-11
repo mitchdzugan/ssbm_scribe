@@ -4,7 +4,7 @@ import cv2
 import os
 import numpy as np
 
-dumpPath = "C:\\Users\\Mitch\\AppData\\Roaming\\Slippi Launcher\\playback\\User\\Dump\\Frames"
+dumpPath = ".\\User\\Dump\\Frames"
 
 def main():
     files = os.listdir(dumpPath)
@@ -23,7 +23,7 @@ def main():
         if img is None:
             continue
         yOff = 0
-        xOff = 300
+        xOff = (1920 - img.shape[1]) // 2
         final = np.zeros((1080, 1920, 3), dtype="uint8")
         final[yOff:yOff + img.shape[0], xOff:xOff + img.shape[1]] = img
         vid.write(final)

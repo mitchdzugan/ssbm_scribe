@@ -102,7 +102,7 @@ const getData = (game) => {
             oppEndPercent,
             myEndStocks,
             myEndPercent,
-            doer: "surface",
+            doer: config.doer,
             endResult: (
                 !stats.gameComplete ? 5 : (winnerIndex === myIndex ? 1 : 0)
             )
@@ -137,7 +137,7 @@ const main = async () => {
     // PREPARE
     // const slpFile = process.argv[2];
     const slpFile = createWriteStream(__dirname + "\\todo.slp");
-    http.get("http://192.168.1.28:3000/api/fake", async (res) => {
+    http.get("http://192.168.1.28:3000/api/take", async (res) => {
         const filename = res
             .headers["content-disposition"]
             .split("filename=")[1]
@@ -157,8 +157,6 @@ const main = async () => {
         const DATA = getData(game);
 
         if (DATA.isSkip) {
-            /**
-             * TODO DELETE
             request.post({
                 url: "http://192.168.1.28:3000/api/" + filename + "/reject",
                 form: { skipReason: DATA.skipReason }
@@ -166,8 +164,6 @@ const main = async () => {
                 console.log("Requesting new in 5 seconds...");
                 setTimeout(main, 5000);
             });
-             *
-             */
         } else {
             const myPortId = settings.players[is0 ? 0 : 1].port - 1;
             const Command = {
@@ -249,7 +245,7 @@ const main = async () => {
                     if (currentFrame === metadata.lastFrame) {
                         console.log("Spwaning...");
                         const awaitProc = spawn("python", [
-                            "C:\\Users\\Mitch\\Projects\\Recording\\awaitEnd.py"
+                            `${__dirname}\\awaitEnd.py`
                         ]);
                         awaitProc.stdout.on("data", async (data) => {
                             if (data.toString().trim() === "DONE") {
@@ -257,20 +253,17 @@ const main = async () => {
                                 awaitProc.kill();
                                 console.log("vidOfFrames...");
                                 await pexec(
-                                    'python "C:\\Users\\Mitch\\Projects\\Recording\\vidOfFrames.py"'
+                                    `python "${__dirname}\\vidOfFrames.py"`
                                 );
                                 console.log("audio...");
                                 await pexec(
-                                    'ffmpeg -i "C:\\Users\\Mitch\\Projects\\Recording\\videoOnly.avi" -i "C:\\Users\\Mitch\\AppData\\Roaming\\Slippi Launcher\\playback\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "C:\\Users\\Mitch\\Projects\\Recording\\full.avi"'
+                                    `ffmpeg -i "${__dirname}\\videoOnly.avi" -i "${__dirname}\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "${__dirname}\\full.avi"`
                                 );
                                 console.log("codec...");
                                 await pexec(
-                                    'ffmpeg -i "C:\\Users\\Mitch\\Projects\\Recording\\full.avi" -c:a copy -c:v libx265 -b:v 12M "C:\\Users\\Mitch\\Projects\\Recording\\final.mp4"'
+                                    `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
                                 );
                                 console.log("uploading...");
-                                
-                                /**
-                                 * TODO DELETE
                                 const req = request.post("http://192.168.1.28:3000/api/" + filename + "/upload", () => {
                                     console.log("Requesting new in 5 seconds...");
                                     setTimeout(main, 5000);
@@ -279,8 +272,6 @@ const main = async () => {
                                 form.append("Game", JSON.stringify(DATA.Game));
                                 form.append("Combos", JSON.stringify(DATA.Combos));
                                 form.append("vod", createReadStream(__dirname + "\\final.mp4"));
-                                 *
-                                 */
                             }
                         });
                     }

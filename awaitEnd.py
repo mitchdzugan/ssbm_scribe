@@ -5,7 +5,7 @@ import os
 import numpy as np
 import time
 
-dumpPath = "C:\\Users\\Mitch\\AppData\\Roaming\\Slippi Launcher\\playback\\User\\Dump\\Frames"
+dumpPath = ".\\User\\Dump\\Frames"
 
 def main():
     while True:

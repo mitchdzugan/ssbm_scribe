@@ -116,7 +116,10 @@ const main = async () => {
     const recordJson = await fs.readFile(__dirname + "\\_record.json");
     await fs.writeFile(
         __dirname + "\\record.json",
-        recordJson.toString(encoding = "utf8").replace("__dirname", __dirname)
+        recordJson.toString(encoding = "utf8").replace(
+            "__dirname", 
+            __dirname.replace(/\\/g, "\\\\")
+        )
     );
     const frames = await fs.readdir(dumpPath + "Frames");
     const wavs = await fs.readdir(dumpPath + "Audio");

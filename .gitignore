@@ -14,6 +14,7 @@ pids
 *.avi
 *.slp
 
+record.json
 User/Cache
 User/Dump/Frames/*.png
 User/Dump/Audio/*.wav

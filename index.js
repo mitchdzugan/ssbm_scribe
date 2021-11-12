@@ -113,6 +113,11 @@ const getData = (game) => {
 
 const main = async () => {
     // CLEAN
+    const recordJson = await fs.readFile(__dirname + "\\_record.json");
+    await fs.writeFile(
+        __dirname + "\\record.json",
+        recordJson.toString(encoding = "utf8").replace("__dirname", __dirname)
+    );
     const frames = await fs.readdir(dumpPath + "Frames");
     const wavs = await fs.readdir(dumpPath + "Audio");
     for (const frame of frames) {

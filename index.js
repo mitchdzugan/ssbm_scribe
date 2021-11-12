@@ -16,6 +16,8 @@ const pexec = util.promisify(exec);
 const dumpPath = __dirname + "\\User\\Dump\\";
 const slippiExe = config.slippiExe;
 
+const IP = "192.168.1.17";
+
 const getData = (game) => {
     const settings = game.getSettings();
     const isSingles = settings.players.length === 2;
@@ -145,7 +147,7 @@ const main = async () => {
     // PREPARE
     // const slpFile = process.argv[2];
     const slpFile = createWriteStream(__dirname + "\\todo.slp");
-    http.get("http://192.168.1.28:3000/api/take", async (res) => {
+    http.get(`http://${IP}:3000/api/take`, async (res) => {
         const filename = res
             .headers["content-disposition"]
             .split("filename=")[1]
@@ -166,7 +168,7 @@ const main = async () => {
 
         if (DATA.isSkip) {
             request.post({
-                url: "http://192.168.1.28:3000/api/" + filename + "/reject",
+                url: `http://${IP}:3000/api/${filename}/reject`,
                 form: { skipReason: DATA.skipReason }
             }, () => {
                 console.log("Requesting new in 5 seconds...");
@@ -272,7 +274,7 @@ const main = async () => {
                                     `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
                                 );
                                 console.log("uploading...");
-                                const req = request.post("http://192.168.1.28:3000/api/" + filename + "/upload", () => {
+                                const req = request.post(`http://${IP}:3000/api/${filename}/upload`, () => {
                                     console.log("Requesting new in 5 seconds...");
                                     setTimeout(main, 5000);
                                 });

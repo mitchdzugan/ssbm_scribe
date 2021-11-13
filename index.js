@@ -16,7 +16,7 @@ const pexec = util.promisify(exec);
 const dumpPath = __dirname + "\\User\\Dump\\";
 const slippiExe = config.slippiExe;
 
-const IP = "192.168.1.17";
+const IP = "192.168.1.24";
 
 const getData = (game) => {
     const settings = game.getSettings();

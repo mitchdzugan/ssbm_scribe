@@ -147,7 +147,7 @@ const main = async () => {
     // PREPARE
     // const slpFile = process.argv[2];
     const slpFile = createWriteStream(__dirname + "\\todo.slp");
-    http.get(`http://${IP}:3000/api/take`, async (res) => {
+    http.get(`http://${IP}:3000/api/fake`, async (res) => {
         const filename = res
             .headers["content-disposition"]
             .split("filename=")[1]
@@ -165,6 +165,39 @@ const main = async () => {
         };
         const is0 = isMe(settings.players[0]);
         const DATA = getData(game);
+
+        const wrapUp = async () => {
+            /*
+            console.log("vidOfFrames...");
+            await pexec(
+                `python "${__dirname}\\vidOfFrames.py"`
+            );
+            console.log("audio...");
+            await pexec(
+                `ffmpeg -i "${__dirname}\\videoOnly.avi" -i "${__dirname}\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "${__dirname}\\full.avi"`
+            );
+            console.log("codec...");
+            await pexec(
+                `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
+            );
+            */
+            console.log("preview...");
+            await pexec(
+                `ffmpeg -i "${__dirname}\\final.mp4" -an -s hd720 -pix_fmt yuv420p -preset slow -profile:v baseline -movflags faststart -vcodec libx264 -b:v 800K -filter:v fps=30 "${__dirname}\\preview.mp4"`
+            );
+            console.log("uploading...");
+            const req = request.post(`http://${IP}:3000/api/${filename}/upload`, () => {
+                console.log("Requesting new in 5 seconds...");
+                setTimeout(main, 5000);
+            });
+            const form = req.form();
+            form.append("Game", JSON.stringify(DATA.Game));
+            form.append("Combos", JSON.stringify(DATA.Combos));
+            form.append("preview", createReadStream(__dirname + "\\preview.mp4"));
+            form.append("vod", createReadStream(__dirname + "\\final.mp4"));
+        };
+        wrapUp();
+        return;
 
         if (DATA.isSkip) {
             request.post({
@@ -261,27 +294,7 @@ const main = async () => {
                             if (data.toString().trim() === "DONE") {
                                 slippiProc.kill();
                                 awaitProc.kill();
-                                console.log("vidOfFrames...");
-                                await pexec(
-                                    `python "${__dirname}\\vidOfFrames.py"`
-                                );
-                                console.log("audio...");
-                                await pexec(
-                                    `ffmpeg -i "${__dirname}\\videoOnly.avi" -i "${__dirname}\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "${__dirname}\\full.avi"`
-                                );
-                                console.log("codec...");
-                                await pexec(
-                                    `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
-                                );
-                                console.log("uploading...");
-                                const req = request.post(`http://${IP}:3000/api/${filename}/upload`, () => {
-                                    console.log("Requesting new in 5 seconds...");
-                                    setTimeout(main, 5000);
-                                });
-                                const form = req.form();
-                                form.append("Game", JSON.stringify(DATA.Game));
-                                form.append("Combos", JSON.stringify(DATA.Combos));
-                                form.append("vod", createReadStream(__dirname + "\\final.mp4"));
+                                wrapUp();
                             }
                         });
                     }

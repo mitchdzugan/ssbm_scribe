@@ -18,18 +18,32 @@ const slippiExe = config.slippiExe;
 
 const IP = "192.168.1.24";
 
+const getGame = (path) => {
+    const game = new SlippiGame(__dirname + "\\todo.slp");
+    const settings = game.getSettings();
+    const metadata = game.getMetadata();
+    game.isMe = (n) => {
+        const characterId = (((settings || {}).players || [])[n] || {}).characterId;
+        const codeA = ((((settings || {}).players || [])[n] || {}).connectCode || "").toLowerCase();
+        const codeB = ""; // (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
+        return characterId === 17 && (
+            codeA === "dz#788"   || 
+            codeA === "lube#420" ||
+            codeB === "dz#788"   || 
+            codeB === "lube#420"
+        );
+    };
+    return game;
+};
+
 const getData = (game) => {
     const settings = game.getSettings();
     const isSingles = settings.players.length === 2;
     const metadata = game.getMetadata();
     const stats = game.getStats();
 
-    const isMe = ({ connectCode, characterId }) => {
-        const code = connectCode.toLowerCase();
-        return characterId === 17 && (code === "dz#788" || code === "lube#420");
-    };
-    const is0 = isMe(settings.players[0]);
-    const is1 = isMe(settings.players[1]);
+    const is0 = game.isMe(0);
+    const is1 = game.isMe(1);
     const isDitto = (
         settings.players[0].characterId === settings.players[1].characterId
     );
@@ -156,15 +170,11 @@ const main = async () => {
             .trim();
         res.pipe(slpFile);
         await new Promise(fulfill => slpFile.on("finish", fulfill));
-        const game = new SlippiGame(__dirname + "\\todo.slp");
+        const game = getGame(__dirname + "\\todo.slp");
         const settings = game.getSettings();
         const metadata = game.getMetadata();
 
-        const isMe = ({ connectCode, characterId }) => {
-            const code = connectCode.toLowerCase();
-            return characterId === 17 && (code === "dz#788" || code === "lube#420");
-        };
-        const is0 = isMe(settings.players[0]);
+        const is0 = game.isMe(0);
         const DATA = getData(game);
 
         const wrapUp = async () => {

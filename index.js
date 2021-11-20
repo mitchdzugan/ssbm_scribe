@@ -25,7 +25,7 @@ const getGame = (path) => {
     game.isMe = (n) => {
         const characterId = (((settings || {}).players || [])[n] || {}).characterId;
         const codeA = ((((settings || {}).players || [])[n] || {}).connectCode || "").toLowerCase();
-        const codeB = ""; // (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
+        const codeB = (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
         return characterId === 17 && (
             codeA === "dz#788"   || 
             codeA === "lube#420" ||

@@ -271,8 +271,22 @@ const main = async () => {
                 "--slippi-input", __dirname + "\\record.json", 
                 "--exec", config.meleeIso
             ]);
+            let timeoutId = null;
+            const resetTimeout = () => {
+                timeoutId = setTimeout(
+                    () => {
+                        slippiProc.kill();
+                        console.log("Broke... trying again in 5 seconds");
+                        setTimeout(() => main(), 5000);
+                    },
+                    60000,
+                );
+            };
+
             slippiProc.stdout.on("data", (data) => {
                 const msg = data.toString().trim();
+                clearTimeout(timeoutId);
+                resetTimeout();
                 if (msg.startsWith("[CURRENT_FRAME]")) {
                     const currentFrame = parseInt(msg.split("[CURRENT_FRAME]")[1].trim());
                     console.log({
@@ -280,6 +294,7 @@ const main = async () => {
                         lastFrame: metadata.lastFrame
                     });
                     if (currentFrame === metadata.lastFrame) {
+                        clearTimeout(timeoutId);
                         setTimeout(
                             () => {
                                 slippiProc.kill();

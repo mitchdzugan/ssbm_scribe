@@ -178,36 +178,19 @@ const main = async () => {
         const DATA = getData(game);
 
         const wrapUp = async () => {
-            console.log("vidOfFrames...");
-            await pexec(
-                `python "${__dirname}\\vidOfFrames.py"`
-            );
-            console.log("audio...");
-            await pexec(
-                `ffmpeg -i "${__dirname}\\videoOnly.avi" -i "${__dirname}\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "${__dirname}\\full.avi"`
-            );
-            console.log("codec...");
-            await pexec(
-                `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
-            );
             console.log("preview...");
             await pexec(
-                `ffmpeg -i "${__dirname}\\final.mp4" -an -s hd720 -pix_fmt yuv420p -preset slow -profile:v baseline -movflags faststart -vcodec libx264 -b:v 800K -filter:v fps=30 "${__dirname}\\preview.mp4"`
+                `ffmpeg -i "${__dirname}\\User\\Dump\\Frames\\framedump0.avi" -an -s hd720 -pix_fmt yuv420p -preset slow -profile:v baseline -movflags faststart -vcodec libx264 -b:v 1200K -filter:v fps=30 "${__dirname}\\preview.mp4"`
             );
             console.log("uploading preview...");
-            const req = request.post(`http://${IP}:3000/api/${filename}/previewUpload`, () => {
-                console.log("uploading...");
-                const req1 = request.post(`http://${IP}:3000/api/${filename}/upload`, () => {
-                    console.log("Requesting new in 5 seconds...");
-                    setTimeout(main, 5000);
-                });
-                const form1 = req1.form();
-                form1.append("Game", JSON.stringify(DATA.Game));
-                form1.append("Combos", JSON.stringify(DATA.Combos));
-                form1.append("vod", createReadStream(__dirname + "\\final.mp4"));
+            const req1 = request.post(`http://${IP}:3000/api/${filename}/pupload`, () => {
+                console.log("Requesting new in 5 seconds...");
+                setTimeout(main, 5000);
             });
-            const form = req.form();
-            form.append("preview", createReadStream(__dirname + "\\preview.mp4"));
+            const form1 = req1.form();
+            form1.append("Game", JSON.stringify(DATA.Game));
+            form1.append("Combos", JSON.stringify(DATA.Combos));
+            form1.append("vod", createReadStream(__dirname + "\\preview.mp4"));
         };
 
         if (DATA.isSkip) {
@@ -297,6 +280,14 @@ const main = async () => {
                         lastFrame: metadata.lastFrame
                     });
                     if (currentFrame === metadata.lastFrame) {
+                        setTimeout(
+                            () => {
+                                slippiProc.kill();
+                                wrapUp();
+                            },
+                            8000
+                        );
+                        /*
                         console.log("Spwaning...");
                         const awaitProc = spawn("python", [
                             `${__dirname}\\awaitEnd.py`
@@ -308,6 +299,7 @@ const main = async () => {
                                 wrapUp();
                             }
                         });
+                        */
                     }
                 }
             });

@@ -272,7 +272,7 @@ const main = async () => {
                 "--exec", config.meleeIso
             ]);
             let timeoutId = null;
-            const resetTimeout = () => {
+            let resetTimeout = () => {
                 timeoutId = setTimeout(
                     () => {
                         slippiProc.kill();
@@ -295,6 +295,7 @@ const main = async () => {
                     });
                     if (currentFrame === metadata.lastFrame) {
                         clearTimeout(timeoutId);
+                        resetTimeout = () => {};
                         setTimeout(
                             () => {
                                 slippiProc.kill();

@@ -40,7 +40,10 @@ const getData = (game) => {
     const settings = game.getSettings();
     const isSingles = settings.players.length === 2;
     const metadata = game.getMetadata();
-    const stats = game.getStats();
+	const mLastFrame = (metadata || {}).lastFrame;
+	const cLastFrame = Math.max(...Object.keys(game.getFrames()).map(s => parseInt(s, 10)));
+	const lastFrame = mLastFrame || cLastFrame;
+	const stats = game.getStats();
 
     const is0 = game.isMe(0);
     const is1 = game.isMe(1);
@@ -49,7 +52,7 @@ const getData = (game) => {
     );
     const myIndex = is0 ? 0 : 1;
     const amIn = is0 || is1;
-    const isShort = metadata.lastFrame < 60 * 30;
+    const isShort = lastFrame < 60 * 30;
 
     let skipReason = null;
     if (!amIn) {
@@ -67,7 +70,7 @@ const getData = (game) => {
     }
 
     const frames = game.getFrames();
-    const { players } = frames[metadata.lastFrame];
+    const { players } = frames[lastFrame];
     const winnerIndex = !stats.gameComplete ? null : (
         players[0].post.stocksRemaining === 0 ? 1 : 0
     );
@@ -111,7 +114,7 @@ const getData = (game) => {
         Game: {
             characterId: settings.players[is0 ? 1 : 0].characterId,
             stageId: settings.stageId,
-            lastFrame: metadata.lastFrame,
+            lastFrame,
             myPort: settings.players[is0 ? 0 : 1].port - 1,
             myIndex,
             oppEndStocks,
@@ -173,6 +176,9 @@ const main = async () => {
         const game = getGame(__dirname + "\\todo.slp");
         const settings = game.getSettings();
         const metadata = game.getMetadata();
+	    const mLastFrame = (metadata || {}).lastFrame;
+	    const cLastFrame = Math.max(...Object.keys(game.getFrames()).map(s => parseInt(s, 10)));
+	    const lastFrame = mLastFrame || cLastFrame;
 
         const is0 = game.isMe(0);
         const DATA = getData(game);
@@ -289,11 +295,8 @@ const main = async () => {
                 resetTimeout();
                 if (msg.startsWith("[CURRENT_FRAME]")) {
                     const currentFrame = parseInt(msg.split("[CURRENT_FRAME]")[1].trim());
-                    console.log({
-                        currentFrame,
-                        lastFrame: metadata.lastFrame
-                    });
-                    if (currentFrame === metadata.lastFrame) {
+                    console.log({ currentFrame, lastFrame });
+                    if (currentFrame === lastFrame) {
                         clearTimeout(timeoutId);
                         resetTimeout = () => {};
                         setTimeout(

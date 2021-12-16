@@ -50,6 +50,8 @@ const getData = (game) => {
     const isDitto = (
         settings.players[0].characterId === settings.players[1].characterId
     );
+    const characterId = settings.players[is0 ? 1 : 0].characterId;
+    const stageId = settings.stageId;
     const myIndex = is0 ? 0 : 1;
     const amIn = is0 || is1;
     const isShort = lastFrame < 60 * 30;
@@ -63,6 +65,10 @@ const getData = (game) => {
         skipReason = "isDitto"
     } else if (!isSingles) {
         skipReason = "isDoubles";
+    } else if (characterId > 25) {
+        skipReason = "invalidCharacter";
+    } else if (stageId < 2 || stageId > 32 || stageId === 21) {
+        skipReason = "invalidStage";
     }
 
     if (skipReason) {
@@ -112,8 +118,8 @@ const getData = (game) => {
     return {
         isSkip: false,
         Game: {
-            characterId: settings.players[is0 ? 1 : 0].characterId,
-            stageId: settings.stageId,
+            characterId,
+            stageId,
             lastFrame,
             myPort: settings.players[is0 ? 0 : 1].port - 1,
             myIndex,
@@ -173,6 +179,7 @@ const main = async () => {
             .trim();
         res.pipe(slpFile);
         await new Promise(fulfill => slpFile.on("finish", fulfill));
+        console.log({ filename });
         const game = getGame(__dirname + "\\todo.slp");
         const settings = game.getSettings();
         const metadata = game.getMetadata();
@@ -295,7 +302,7 @@ const main = async () => {
                 resetTimeout();
                 if (msg.startsWith("[CURRENT_FRAME]")) {
                     const currentFrame = parseInt(msg.split("[CURRENT_FRAME]")[1].trim());
-                    console.log({ currentFrame, lastFrame });
+                    console.log(filename, { currentFrame, lastFrame });
                     if (currentFrame === lastFrame) {
                         clearTimeout(timeoutId);
                         resetTimeout = () => {};

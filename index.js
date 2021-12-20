@@ -76,7 +76,9 @@ const getData = (game) => {
     }
 
     const frames = game.getFrames();
-    const { players } = frames[lastFrame];
+    let i = lastFrame;
+    while (!frames[i].players[0].post) { console.log(i); i--; }
+    const { players } = frames[i];
     const winnerIndex = !stats.gameComplete ? null : (
         players[0].post.stocksRemaining === 0 ? 1 : 0
     );
@@ -177,9 +179,9 @@ const main = async () => {
             .split("filename=")[1]
             .split(".slp")[0]
             .trim();
+        console.log({ filename });
         res.pipe(slpFile);
         await new Promise(fulfill => slpFile.on("finish", fulfill));
-        console.log({ filename });
         const game = getGame(__dirname + "\\todo.slp");
         const settings = game.getSettings();
         const metadata = game.getMetadata();

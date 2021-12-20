@@ -38,6 +38,7 @@ const getGame = (path) => {
 
 const getData = (game) => {
     const settings = game.getSettings();
+    console.log(settings);
     const isSingles = settings.players.length === 2;
     const metadata = game.getMetadata();
 	const mLastFrame = (metadata || {}).lastFrame;
@@ -76,10 +77,13 @@ const getData = (game) => {
     }
 
     const frames = game.getFrames();
-    const { players } = frames[lastFrame];
+    let i = lastFrame;
+    while (!frames[i].players[0].post) { console.log(i); i--; }
+    const { players } = frames[i];
     const winnerIndex = !stats.gameComplete ? null : (
         players[0].post.stocksRemaining === 0 ? 1 : 0
     );
+    console.log(players);
     const myEndStocks   = players[is0 ? 0 : 1].post.stocksRemaining;
     const myEndPercent  = !myEndStocks  ? 0 : players[is0 ? 0 : 1].post.percent;
     const oppEndStocks  = players[is0 ? 1 : 0].post.stocksRemaining;
@@ -140,13 +144,16 @@ const main = async () => {
     // CLEAN
     // PREPARE
     // const slpFile = process.argv[2];
-    const filename = 'Game_20210709T174053'; // TODO
+    const filename = 'Game_20210421T081841'; // TODO
     const game = getGame(__dirname + "\\todo.slp");
     const DATA = getData(game);
 
     console.log(DATA);
-    return;
     const wrapUp = async () => {
+        console.log("preview...");
+        await pexec(
+            `ffmpeg -i "${__dirname}\\User\\Dump\\Frames\\framedump0.avi" -an -s hd720 -pix_fmt yuv420p -preset slow -profile:v baseline -movflags faststart -vcodec libx264 -b:v 1200K -filter:v fps=30 "${__dirname}\\preview.mp4"`
+        );
         console.log("uploading preview...");
         const req1 = request.post(`http://${IP}:3000/api/${filename}/pupload`, () => {
             console.log("Done!");

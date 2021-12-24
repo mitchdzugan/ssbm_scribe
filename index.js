@@ -169,6 +169,10 @@ const main = async () => {
     await removeIf("preview.mp4");
     await removeIf("full.avi");
     await removeIf("videoOnly.avi");
+	
+	// SETUP
+	await fs.copyFile(__dirname + '\\sdConfig\\Dolphin.ini', __dirname + '\\User\\Config\\Dolphin.ini');
+	await fs.copyFile(__dirname + '\\sdConfig\\GFX.ini', __dirname + '\\User\\Config\\GFX.ini');
 
     // PREPARE
     // const slpFile = process.argv[2];

@@ -26,10 +26,12 @@ const getGame = (path) => {
         const characterId = (((settings || {}).players || [])[n] || {}).characterId;
         const codeA = ((((settings || {}).players || [])[n] || {}).connectCode || "").toLowerCase();
         const codeB = (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
-        return characterId === 17 && (
+        return (characterId === 17 || characterId === 20) && (
             codeA === "dz#788"   || 
+            codeA === "sion#430" ||
             codeA === "lube#420" ||
             codeB === "dz#788"   || 
+            codeB === "sion#430" || 
             codeB === "lube#420"
         );
     };
@@ -61,8 +63,8 @@ const getData = (game) => {
         skipReason = "NotInOrNotYoshi";
     } else if (isShort) {
         skipReason = "isShort";
-    } else if (isDitto) {
-        skipReason = "isDitto"
+    // } else if (isDitto) {
+    //     skipReason = "isDitto"
     } else if (!isSingles) {
         skipReason = "isDoubles";
     } else if (characterId > 25) {

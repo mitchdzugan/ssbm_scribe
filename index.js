@@ -26,7 +26,7 @@ const getGame = (path) => {
         const characterId = (((settings || {}).players || [])[n] || {}).characterId;
         const codeA = ((((settings || {}).players || [])[n] || {}).connectCode || "").toLowerCase();
         const codeB = (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
-        return (characterId === 17 || characterId === 20) && (
+        return characterId === 17 && (
             codeA === "dz#788"   || 
             codeA === "sion#430" ||
             codeA === "lube#420" ||
@@ -63,8 +63,8 @@ const getData = (game) => {
         skipReason = "NotInOrNotYoshi";
     } else if (isShort) {
         skipReason = "isShort";
-    // } else if (isDitto) {
-    //     skipReason = "isDitto"
+    } else if (isDitto) {
+        skipReason = "isDitto"
     } else if (!isSingles) {
         skipReason = "isDoubles";
     } else if (characterId > 25) {
@@ -109,10 +109,10 @@ const getData = (game) => {
         .filter(({ playerIndex }) => playerIndex !== myIndex)
         .map(({ startFrame, endFrame, startPercent, endPercent, moves, didKill, openingType }) => ({
             startPercent,
-            damage: endPercent - startPercent,
             startFrame,
-            frames: endFrame - startFrame,
-            didKill,
+            damage: (endPercent - startPercent) >= 0 ? (endPercent - startPercent) : moves.reduce((tot, m) => tot + m.damage, 0),
+            frames: (endFrame - startFrame) >= 0 ? (endFrame - startFrame) : (lastFrame - startFrame),
+            didKill: (startFrame > endFrame) ? true : didKill,
             openingType,
             stock: getStock(startFrame),
             Moves: moves.map(({ moveId, damage }, nth) => (

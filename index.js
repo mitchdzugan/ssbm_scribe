@@ -16,9 +16,9 @@ const pexec = util.promisify(exec);
 const dumpPath = __dirname + "\\User\\Dump\\";
 const slippiExe = config.slippiExe;
 
-const IP = "192.168.1.24";
+const IP = "192.168.1.15";
 
-const getGame = (path) => {
+const getGame = (path, isDefYou = false) => {
     const game = new SlippiGame(__dirname + "\\todo.slp");
     const settings = game.getSettings();
     const metadata = game.getMetadata();
@@ -30,9 +30,16 @@ const getGame = (path) => {
             codeA === "dz#788"   || 
             codeA === "sion#430" ||
             codeA === "lube#420" ||
+            codeA === "lils#393" ||
+            codeA === "katy#377" ||
+            codeA === "pink#715" ||
             codeB === "dz#788"   || 
             codeB === "sion#430" || 
-            codeB === "lube#420"
+            codeB === "lube#420" || 
+            codeB === "lils#393" || 
+            codeB === "katy#377" ||
+            codeB === "pink#715" ||
+            isDefYou
         );
     };
     return game;
@@ -40,7 +47,7 @@ const getGame = (path) => {
 
 const getData = (game) => {
     const settings = game.getSettings();
-    const isSingles = settings.players.length === 2;
+    const isSingles = settings && settings.players && settings.players.length === 2;
     const metadata = game.getMetadata();
 	const mLastFrame = (metadata || {}).lastFrame;
 	const cLastFrame = Math.max(...Object.keys(game.getFrames()).map(s => parseInt(s, 10)));
@@ -49,11 +56,11 @@ const getData = (game) => {
 
     const is0 = game.isMe(0);
     const is1 = game.isMe(1);
-    const isDitto = (
+    const isDitto = settings && settings.players && (
         settings.players[0].characterId === settings.players[1].characterId
     );
-    const characterId = settings.players[is0 ? 1 : 0].characterId;
-    const stageId = settings.stageId;
+    const characterId = settings && settings.players && settings.players[is0 ? 1 : 0].characterId;
+    const stageId = settings && settings.stageId;
     const myIndex = is0 ? 0 : 1;
     const amIn = is0 || is1;
     const isShort = lastFrame < 60 * 30;
@@ -79,27 +86,46 @@ const getData = (game) => {
 
     const frames = game.getFrames();
     let i = lastFrame;
-    while (!frames[i].players[0].post) { console.log(i); i--; }
+    let index0 = 0;
+    let index1 = 1;
+    let setIndex0 = false;
+    let index = 0;
+    const sframe = frames[0]
+    while (index < 4) {
+        if (sframe.players[index]) {
+            if (setIndex0) {
+                index1 = index;
+                break;
+            } else {
+                index0 = index;
+                setIndex0 = true;
+            }
+        }
+        index++;
+    }
+    while (!frames[i].players[index0].post) { console.log(i); i--; }
     const { players } = frames[i];
     const winnerIndex = !stats.gameComplete ? null : (
-        players[0].post.stocksRemaining === 0 ? 1 : 0
+        players[index0].post.stocksRemaining === 0 ? 1 : 0
     );
-    const myEndStocks   = players[is0 ? 0 : 1].post.stocksRemaining;
-    const myEndPercent  = !myEndStocks  ? 0 : players[is0 ? 0 : 1].post.percent;
-    const oppEndStocks  = players[is0 ? 1 : 0].post.stocksRemaining;
-    const oppEndPercent = !oppEndStocks ? 0 : players[is0 ? 1 : 0].post.percent;
+    const myEndStocks   = players[is0 ? index0 : index1].post.stocksRemaining;
+    const myEndPercent  = !myEndStocks  ? 0 : players[is0 ? index0 : index1].post.percent;
+    const oppEndStocks  = players[is0 ? index1 : index0].post.stocksRemaining;
+    const oppEndPercent = !oppEndStocks ? 0 : players[is0 ? index1 : index0].post.percent;
     const stockData = [
+        [],
+        [],
         [],
         [],
     ];
     stats.stocks.forEach(({ playerIndex, count, startFrame }) => {
         stockData[playerIndex].push({ startFrame, count });
     });
-    stockData[0].sort((a, b) => a.count - b.count);
-    stockData[1].sort((a, b) => a.count - b.count);
+    stockData[index0].sort((a, b) => a.count - b.count);
+    stockData[index1].sort((a, b) => a.count - b.count);
     const getStock = (frame) => {
         let stock = null;
-        stockData[is0 ? 1 : 0].forEach(({ startFrame, count }) => {
+        stockData[is0 ? index1 : index0].forEach(({ startFrame, count }) => {
             if (frame < startFrame || stock) { return; }
             stock = count;
         });
@@ -180,15 +206,17 @@ const main = async () => {
     // const slpFile = process.argv[2];
     const slpFile = createWriteStream(__dirname + "\\todo.slp");
     http.get(`http://${IP}:3000/api/take`, async (res) => {
+	console.log("Um hello wtf?");
         const filename = res
             .headers["content-disposition"]
             .split("filename=")[1]
             .split(".slp")[0]
             .trim();
-        console.log({ filename });
+        const isDefYou = filename.startsWith('Game_2024');
+        console.log({ filename, isDefYou });
         res.pipe(slpFile);
         await new Promise(fulfill => slpFile.on("finish", fulfill));
-        const game = getGame(__dirname + "\\todo.slp");
+        const game = getGame(__dirname + "\\todo.slp", isDefYou);
         const settings = game.getSettings();
         const metadata = game.getMetadata();
 	    const mLastFrame = (metadata || {}).lastFrame;

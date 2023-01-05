@@ -16,7 +16,7 @@ const pexec = util.promisify(exec);
 const dumpPath = __dirname + "\\User\\Dump\\";
 const slippiExe = config.slippiExe;
 
-const IP = "192.168.1.24";
+const IP = "192.168.1.17";
 
 const getGame = (path) => {
     const game = new SlippiGame(__dirname + "\\todo.slp");
@@ -26,11 +26,16 @@ const getGame = (path) => {
         const characterId = (((settings || {}).players || [])[n] || {}).characterId;
         const codeA = ((((settings || {}).players || [])[n] || {}).connectCode || "").toLowerCase();
         const codeB = (((((metadata || {}).players || [])[n] || {}).names || {}).code || "").toLowerCase();
-        return characterId === 17 && (
+        return (characterId === 17 || characterId === 20) && (
             codeA === "dz#788"   || 
+            codeA === "sion#430" ||
+            codeA === "katy#377" ||
             codeA === "lube#420" ||
             codeB === "dz#788"   || 
-            codeB === "lube#420"
+            codeB === "sion#430" || 
+            codeB === "katy#377" || 
+            codeB === "lube#420" ||
+            true
         );
     };
     return game;
@@ -61,8 +66,8 @@ const getData = (game) => {
         skipReason = "NotInOrNotYoshi";
     } else if (isShort) {
         skipReason = "isShort";
-    } else if (isDitto) {
-        skipReason = "isDitto"
+    // } else if (isDitto) {
+    //     skipReason = "isDitto"
     } else if (!isSingles) {
         skipReason = "isDoubles";
     } else if (characterId > 25) {
@@ -77,27 +82,46 @@ const getData = (game) => {
 
     const frames = game.getFrames();
     let i = lastFrame;
-    while (!frames[i].players[0].post) { console.log(i); i--; }
+    let index0 = 0;
+    let index1 = 1;
+    let setIndex0 = false;
+    let index = 0;
+    const sframe = frames[0]
+    while (index < 4) {
+        if (sframe.players[index]) {
+            if (setIndex0) {
+                index1 = index;
+                break;
+            } else {
+                index0 = index;
+                setIndex0 = true;
+            }
+        }
+        index++;
+    }
+    while (!frames[i].players[index0].post) { console.log(i); i--; }
     const { players } = frames[i];
     const winnerIndex = !stats.gameComplete ? null : (
-        players[0].post.stocksRemaining === 0 ? 1 : 0
+        players[index0].post.stocksRemaining === 0 ? 1 : 0
     );
-    const myEndStocks   = players[is0 ? 0 : 1].post.stocksRemaining;
-    const myEndPercent  = !myEndStocks  ? 0 : players[is0 ? 0 : 1].post.percent;
-    const oppEndStocks  = players[is0 ? 1 : 0].post.stocksRemaining;
-    const oppEndPercent = !oppEndStocks ? 0 : players[is0 ? 1 : 0].post.percent;
+    const myEndStocks   = players[is0 ? index0 : index1].post.stocksRemaining;
+    const myEndPercent  = !myEndStocks  ? 0 : players[is0 ? index0 : index1].post.percent;
+    const oppEndStocks  = players[is0 ? index1 : index0].post.stocksRemaining;
+    const oppEndPercent = !oppEndStocks ? 0 : players[is0 ? index1 : index0].post.percent;
     const stockData = [
+        [],
+        [],
         [],
         [],
     ];
     stats.stocks.forEach(({ playerIndex, count, startFrame }) => {
         stockData[playerIndex].push({ startFrame, count });
     });
-    stockData[0].sort((a, b) => a.count - b.count);
-    stockData[1].sort((a, b) => a.count - b.count);
+    stockData[index0].sort((a, b) => a.count - b.count);
+    stockData[index1].sort((a, b) => a.count - b.count);
     const getStock = (frame) => {
         let stock = null;
-        stockData[is0 ? 1 : 0].forEach(({ startFrame, count }) => {
+        stockData[is0 ? index1 : index0].forEach(({ startFrame, count }) => {
             if (frame < startFrame || stock) { return; }
             stock = count;
         });
@@ -205,17 +229,13 @@ const main = async () => {
             await pexec(
                 `ffmpeg -i "${__dirname}\\videoOnly.avi" -i "${__dirname}\\User\\Dump\\Audio\\dspdump.wav" -c:v copy -c:a aac "${__dirname}\\full.avi"`
             );
-            console.log("codec...");
-            await pexec(
-                `ffmpeg -i "${__dirname}\\full.avi" -c:a copy -c:v libx265 -b:v 12M "${__dirname}\\final.mp4"`
-            );
             console.log("uploading...");
             const req1 = request.post(`http://${IP}:3000/api/${filename}/hdUpload`, () => {
                 console.log("Requesting new in 5 seconds...");
                 setTimeout(main, 5000);
             });
             const form1 = req1.form();
-            form1.append("vod", createReadStream(__dirname + "\\final.mp4"));
+            form1.append("vod", createReadStream(__dirname + "\\full.avi"));
         };
 
         if (DATA.isSkip) {

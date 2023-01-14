@@ -11,13 +11,14 @@ const { SlippiGame }                    = require("@slippi/slippi-js");
 const util                              = require("util");
 const decompress                        = require("decompress");
 const config                            = require("./config.json");
+const { Client }                        = require("node-scp");
 
 const pexec = util.promisify(exec);
 
 const dumpPath = __dirname + "\\User\\Dump\\";
 const slippiExe = config.slippiExe;
 
-const IP = "192.168.1.15";
+const IP = "192.168.1.10";
 
 const getGame = (path) => {
     const game = new SlippiGame(path);
@@ -127,12 +128,17 @@ const recNext = async (setId, games, i) => {
             });
             await new Promise(fulfill => audi.on("close", fulfill));
             console.log("uploading vod...");
-            const req1 = request.post(`http://${IP}:3000/api/${setId}/setupload`, () => {
-                console.log("Requesting new in 5 seconds...");
-                setTimeout(main, 5000);
-            });
-            const form1 = req1.form();
-            form1.append("vod", createReadStream(__dirname + "\\set.avi"));
+            const client = await Client({
+                host: IP,
+                port: 22,
+                username: 'dz',
+                password: '__ENTER_HERE__'
+            })
+            await client.uploadFile('./set.avi', `/mnt/d/__yo5h1_pr0n__/fin/${setId}.avi`);
+            client.close();
+            console.log("Requesting new in 5 seconds...");
+            console.log([setId, "Ok to quit now..."]);
+            setTimeout(main, 5000);
         }
     };
 
